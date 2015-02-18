@@ -54,7 +54,6 @@ public class ProductServlet extends HttpServlet{
             while (rs.next()) {
                 sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
             }
-            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -76,7 +75,6 @@ public class ProductServlet extends HttpServlet{
             }
             sb.setLength(Math.max(sb.length() - 2, 0));
             sb.append("]");
-            conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,14 +83,22 @@ public class ProductServlet extends HttpServlet{
     
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+        String result;
         Set<String> keySet = request.getParameterMap().keySet();
         try (PrintWriter out = response.getWriter()) {
             if (keySet.contains("name") && keySet.contains("description") && keySet.contains("quantity")) {
-                // There are some parameters            
+                          
                 String name = request.getParameter("name");
                 String description = request.getParameter("description");
                 String quantity = request.getParameter("quantity");
-                out.println(doUpdate("INSERT INTO product (Name, Description, Quantity) VALUES (?, ?, ?)", name, description, quantity));
+                result = (doUpdate("INSERT INTO product (Name, Description, Quantity) VALUES (?, ?, ?)", name, description, quantity));
+                
+                if (result.equalsIgnoreCase("BAD")) {
+                    response.setStatus(500);
+                }
+                else {
+                    out.println(result);
+                }
             } else {
                 // There are no parameters at all
                 out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
@@ -102,24 +108,32 @@ public class ProductServlet extends HttpServlet{
         }
     }
     
-    private int doUpdate(String query, String... params) {
-        int numChanges = 0;
+    private String doUpdate(String query, String... params) {
+        String queryString = "";
         try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
+            PreparedStatement pstmt = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             for (int i = 1; i <= params.length; i++) {
                 pstmt.setString(i, params[i - 1]);
             }
-            numChanges = pstmt.executeUpdate();
-            conn.close();
+            pstmt.executeUpdate();
+
+            ResultSet keys = pstmt.getGeneratedKeys();
+                if (keys.next()) {
+                    queryString = ("<a>http://localhost:8080/JavaWebAssignment/products/" + keys.getInt(1) + "</a>");
+                }
+                else if (params.length == 4) {
+                    queryString = "<a>http://localhost:8080/JavaWebAssignment/products/" + String.valueOf(params[4 - 1]) + "</a>";
+                }
         } catch (SQLException ex) {
-            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+            queryString = "BAD";
         }
-        return numChanges;
+        return queryString;
         
     }
     
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) {
+        String result;
         Set<String> keySet = request.getParameterMap().keySet();
         
         try (PrintWriter out = response.getWriter()) {
@@ -129,7 +143,8 @@ public class ProductServlet extends HttpServlet{
                 String name = request.getParameter("name");
                 String description = request.getParameter("description");
                 String quantity = request.getParameter("quantity");
-                out.println(doUpdate("UPDATE product SET Name = ?, Description = ?, Quantity = ? WHERE ProductId = ?", name, description, quantity, id));
+                result = (doUpdate("UPDATE product SET Name = ?, Description = ?, Quantity = ? WHERE ProductId = ?", name, description, quantity, id));
+                out.println(result);
             } else {
                 // There are no parameters at all
                 out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
@@ -143,20 +158,36 @@ public class ProductServlet extends HttpServlet{
     
     @Override
     protected void doDelete (HttpServletRequest request, HttpServletResponse response) {
+        String result;
         Set<String> keySet = request.getParameterMap().keySet();
         
         try (PrintWriter out = response.getWriter()) {
             if (keySet.contains("id")) {
-                // There are some parameters
                 String id = request.getParameter("id");
-                
-                out.println(doUpdate("DELETE FROM product WHERE ProductId = ?", id));
-            } else {
-                // There are no parameters at all
-                out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
+                result = performDelete("DELETE FROM product WHERE ProductId = ?", id);
+                if (result.equalsIgnoreCase("BAD")) {
+                    response.setStatus(500);
+                }
+                out.println(result);
             }
         } catch (IOException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+    
+     private String performDelete (String query, String...params) {
+         String queryString;
+         
+            try (Connection conn = Credentials.getConnection()) {
+                PreparedStatement pstmt = conn.prepareStatement(query);
+                for (int i = 1; i <= params.length; i++) {
+                    pstmt.setString(i, params[i - 1]);
+                }
+                pstmt.executeUpdate();
+                queryString = "";
+            } catch (SQLException ex) {
+                queryString = "BAD";
+            }
+            return queryString;
+     }
 }
