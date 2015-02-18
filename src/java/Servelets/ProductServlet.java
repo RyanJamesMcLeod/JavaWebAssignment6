@@ -32,7 +32,7 @@ public class ProductServlet extends HttpServlet{
         try (PrintWriter out = response.getWriter()) {
             if (!request.getParameterNames().hasMoreElements()) {
                 // There are no parameters at all
-                out.println(getResults("SELECT * FROM product"));
+                out.println(getResultsArray("SELECT * FROM product"));
             } else {
                 // There are some parameters
                 String id = request.getParameter("id");
@@ -52,8 +52,30 @@ public class ProductServlet extends HttpServlet{
             }
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                sb.append(String.format("%s\t%s\t%s\t%s\n", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+                sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
             }
+            conn.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return sb.toString();
+    }
+    
+    private String getResultsArray(String query, String... params) {
+        StringBuilder sb = new StringBuilder();
+        try (Connection conn = Credentials.getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            for (int i = 1; i <= params.length; i++) {
+                pstmt.setString(i, params[i - 1]);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            sb.append("[ ");
+            while (rs.next()) {
+                
+                sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s },\n", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+            }
+            sb.setLength(Math.max(sb.length() - 2, 0));
+            sb.append("]");
             conn.close();
         } catch (SQLException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
