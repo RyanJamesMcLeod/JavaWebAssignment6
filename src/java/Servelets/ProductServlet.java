@@ -95,4 +95,46 @@ public class ProductServlet extends HttpServlet{
         return numChanges;
         
     }
+    
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) {
+        Set<String> keySet = request.getParameterMap().keySet();
+        
+        try (PrintWriter out = response.getWriter()) {
+            if (keySet.contains("id") && keySet.contains("name") && keySet.contains("description") && keySet.contains("quantity")) {
+                // There are some parameters
+                String id = request.getParameter("id");
+                String name = request.getParameter("name");
+                String description = request.getParameter("description");
+                String quantity = request.getParameter("quantity");
+                out.println(doUpdate("UPDATE product SET Name = ?, Description = ?, Quantity = ? WHERE ProductId = ?", name, description, quantity, id));
+            } else {
+                // There are no parameters at all
+                out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+    }
+    
+    @Override
+    protected void doDelete (HttpServletRequest request, HttpServletResponse response) {
+        Set<String> keySet = request.getParameterMap().keySet();
+        
+        try (PrintWriter out = response.getWriter()) {
+            if (keySet.contains("id")) {
+                // There are some parameters
+                String id = request.getParameter("id");
+                
+                out.println(doUpdate("DELETE FROM product WHERE ProductId = ?", id));
+            } else {
+                // There are no parameters at all
+                out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }
