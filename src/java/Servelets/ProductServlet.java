@@ -128,7 +128,7 @@ public class ProductServlet extends HttpServlet {
                 }
             } else {
                 // There are no parameters at all
-                out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
+                out.println("Error: Not enough data to input. Please use a URL of the form /products?name=XXX&description=XXX&quantity=XXX");
             }
         } catch (IOException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
@@ -188,7 +188,7 @@ public class ProductServlet extends HttpServlet {
                 out.println(result);
             } else {
                 // There are no parameters at all
-                out.println("Error: Not enough data to input. Please use a URL of the form /servlet?name=XXX&age=XXX");
+                out.println("Error: Not enough data to input. Please use a URL of the form /products?id=XXX&name=XXX&description=XXX&quantity=XXX");
             }
         } catch (IOException ex) {
             Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
