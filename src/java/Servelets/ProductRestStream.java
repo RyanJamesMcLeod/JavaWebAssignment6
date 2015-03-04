@@ -60,8 +60,25 @@ public class ProductRestStream {
     
     @GET
     @Path("{id}")
-    public String doGetById (@PathParam("id") int id) {
-        return "World";
+    public String doGetById (@PathParam("id") int id) throws IOException{
+        return getResults("SELECT * FROM product WHERE ProductID = ?", String.valueOf(id));
+    }
+    
+    private String getResults(String query, String... params) {
+        StringBuilder sb = new StringBuilder();
+        try (Connection conn = Credentials.getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement(query);
+            for (int i = 1; i <= params.length; i++) {
+                pstmt.setString(i, params[i - 1]);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return sb.toString();
     }
     
     @POST
