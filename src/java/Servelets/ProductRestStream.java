@@ -52,12 +52,12 @@ public class ProductRestStream {
             ResultSet rs = pstmt.executeQuery();
             sb.append("[ ");
             while (rs.next()) {
-                sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s },\n", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+                sb.append(String.format("{ \"productId\" : %s, \"name\" : \"%s\", \"description\" : \"%s\", \"quantity\" : %s },\n", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
             }
             sb.setLength(Math.max(sb.length() - 2, 0));
             sb.append("]");
         } catch (SQLException ex) {
-            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProductRestStream.class.getName()).log(Level.SEVERE, null, ex);
         }
         return sb.toString();
     }
@@ -77,10 +77,10 @@ public class ProductRestStream {
             }
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                sb.append(String.format("{ \"productId\" : %s, \"name\" : %s, \"description\" : %s, \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+                sb.append(String.format("{ \"productId\" : %s, \"name\" : \"%s\", \"description\" : \"%s\", \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
             }
         } catch (SQLException ex) {
-            Logger.getLogger(ProductServlet.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProductRestStream.class.getName()).log(Level.SEVERE, null, ex);
         }
         return sb.toString();
     }
