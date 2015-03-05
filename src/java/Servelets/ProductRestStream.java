@@ -100,7 +100,7 @@ public class ProductRestStream {
             pstmt.executeUpdate();
             ResultSet keys = pstmt.getGeneratedKeys();
             if (keys.next()) {
-                returnString = ("<a>http://localhost:8080/Assignment3/stream/" + keys.getInt(1) + "</a>");
+                returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + keys.getInt(1) + "</a>");
             }
         } catch (SQLException ex) {
             returnString = ex.getMessage();
@@ -110,8 +110,26 @@ public class ProductRestStream {
 
     @PUT
     @Path("{id}")
-    public String doPut(@PathParam("id") int id) {
-        return "";
+    @Consumes("application/json")
+    public String doPut(@PathParam("id") int id, String data) {
+        JsonReader reader = Json.createReader(new StringReader(data));
+        JsonObject json = reader.readObject();
+        String returnString = "";
+        try (Connection conn = Credentials.getConnection()) {
+            String parameters[] = {json.getString("Name"), json.getString("Description"), String.valueOf(json.getInt("Quantity"))};
+            PreparedStatement pstmt = conn.prepareStatement("UPDATE product SET name = ?, description = ?, quantity = ? WHERE ProductId = ?;", Statement.RETURN_GENERATED_KEYS);
+            for (int i = 1; i <= parameters.length; i++) {
+                pstmt.setString(i, parameters[i - 1]);
+            }
+            pstmt.setInt(4, id);
+            pstmt.executeUpdate();
+            
+                returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + id + "</a>");
+            
+        } catch (SQLException ex) {
+            returnString = ex.getMessage();
+        }
+        return returnString;
     }
 
     @DELETE
