@@ -16,7 +16,10 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -34,12 +37,33 @@ import javax.ws.rs.PathParam;
 public class ProductRestStream {
 
     @GET
-    public String doGet() throws IOException {
-//        JsonObject json = Json.createObjectBuilder()
-//                .add("productID", 4)
-//                .add("description", "thing")
-//                .build();
-        return getResultsArray("SELECT * FROM product");
+    public String doGet() {
+
+        String returnString;
+        
+        try (Connection conn = Credentials.getConnection()) {
+            JsonArrayBuilder jsonArray = Json.createArrayBuilder();
+            JsonObjectBuilder json = Json.createObjectBuilder();
+            
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM product");
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                json.add("ProductId", rs.getInt("ProductId"))
+                        .add("Name", rs.getString("Name"))
+                        .add("Description", rs.getString("Description"))
+                        .add("Quantity", rs.getInt("Quantity"));
+                jsonArray.add(json);
+            }
+
+            JsonArray completeJson = jsonArray.build();
+            returnString = completeJson.toString();
+        } 
+        catch (SQLException ex){
+                returnString = "SQL Error: " + ex.getMessage();
+        }
+        return returnString;
     }
 
     private String getResultsArray(String query, String... params) {
@@ -123,9 +147,9 @@ public class ProductRestStream {
             }
             pstmt.setInt(4, id);
             pstmt.executeUpdate();
-            
-                returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + id + "</a>");
-            
+
+            returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + id + "</a>");
+
         } catch (SQLException ex) {
             returnString = ex.getMessage();
         }
