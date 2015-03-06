@@ -40,11 +40,11 @@ public class ProductRestStream {
     public String doGet() {
 
         String returnString;
-        
+
         try (Connection conn = Credentials.getConnection()) {
             JsonArrayBuilder jsonArray = Json.createArrayBuilder();
             JsonObjectBuilder json = Json.createObjectBuilder();
-            
+
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM product");
 
             ResultSet rs = pstmt.executeQuery();
@@ -59,55 +59,39 @@ public class ProductRestStream {
 
             JsonArray completeJson = jsonArray.build();
             returnString = completeJson.toString();
-        } 
-        catch (SQLException ex){
-                returnString = "SQL Error: " + ex.getMessage();
+        } catch (SQLException ex) {
+            returnString = "SQL Error: " + ex.getMessage();
         }
         return returnString;
     }
 
-    private String getResultsArray(String query, String... params) {
-        StringBuilder sb = new StringBuilder();
-        try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            for (int i = 1; i <= params.length; i++) {
-                pstmt.setString(i, params[i - 1]);
-            }
-            ResultSet rs = pstmt.executeQuery();
-            sb.append("[ ");
-            while (rs.next()) {
-                sb.append(String.format("{ \"productId\" : %s, \"name\" : \"%s\", \"description\" : \"%s\", \"quantity\" : %s },\n", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
-            }
-            sb.setLength(Math.max(sb.length() - 2, 0));
-            sb.append("]");
-        } catch (SQLException ex) {
-            Logger.getLogger(ProductRestStream.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return sb.toString();
-    }
-
     @GET
     @Path("{id}")
-    public String doGetById(@PathParam("id") int id) throws IOException {
-        return getResults("SELECT * FROM product WHERE ProductID = ?", String.valueOf(id));
-    }
+    public String doGetById(@PathParam("id") int id){
+        String returnString;
 
-    private String getResults(String query, String... params) {
-        StringBuilder sb = new StringBuilder();
         try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            for (int i = 1; i <= params.length; i++) {
-                pstmt.setString(i, params[i - 1]);
+                JsonObjectBuilder json = Json.createObjectBuilder();
+                PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM product WHERE ProductId = " + String.valueOf(id));
+                ResultSet rs = pstmt.executeQuery();
+
+                while (rs.next()) {
+                    json.add("ProductId", rs.getInt("ProductId"))
+                        .add("Name", rs.getString("Name"))
+                        .add("Description", rs.getString("Description"))
+                        .add("Quantity", rs.getInt("Quantity"));
+                
+                }
+                JsonObject completeJson = json.build();
+                returnString = completeJson.toString();
             }
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                sb.append(String.format("{ \"productId\" : %s, \"name\" : \"%s\", \"description\" : \"%s\", \"quantity\" : %s }", rs.getInt("ProductID"), rs.getString("Name"), rs.getString("Description"), rs.getInt("Quantity")));
+            catch (SQLException ex) {
+            returnString = "SQL ERROR : " + ex.getMessage();
+
             }
-        } catch (SQLException ex) {
-            Logger.getLogger(ProductRestStream.class.getName()).log(Level.SEVERE, null, ex);
+
+            return returnString;
         }
-        return sb.toString();
-    }
 
     @POST
     @Consumes("application/json")
