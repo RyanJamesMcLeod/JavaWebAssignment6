@@ -28,6 +28,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 
 /**
  *
@@ -37,6 +38,7 @@ import javax.ws.rs.PathParam;
 public class ProductRestStream {
 
     @GET
+    @Produces("application/json")
     public String doGet() {
 
         String returnString;
@@ -67,31 +69,30 @@ public class ProductRestStream {
 
     @GET
     @Path("{id}")
-    public String doGetById(@PathParam("id") int id){
+    @Produces("application/json")
+    public String doGetById(@PathParam("id") int id) {
         String returnString;
 
         try (Connection conn = Credentials.getConnection()) {
-                JsonObjectBuilder json = Json.createObjectBuilder();
-                PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM product WHERE ProductId = " + String.valueOf(id));
-                ResultSet rs = pstmt.executeQuery();
+            JsonObjectBuilder json = Json.createObjectBuilder();
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM product WHERE ProductId = " + String.valueOf(id));
+            ResultSet rs = pstmt.executeQuery();
 
-                while (rs.next()) {
-                    json.add("ProductId", rs.getInt("ProductId"))
+            while (rs.next()) {
+                json.add("ProductId", rs.getInt("ProductId"))
                         .add("Name", rs.getString("Name"))
                         .add("Description", rs.getString("Description"))
                         .add("Quantity", rs.getInt("Quantity"));
-                
-                }
-                JsonObject completeJson = json.build();
-                returnString = completeJson.toString();
-            }
-            catch (SQLException ex) {
-            returnString = "SQL ERROR : " + ex.getMessage();
 
             }
-
-            return returnString;
+            JsonObject completeJson = json.build();
+            returnString = completeJson.toString();
+        } catch (SQLException ex) {
+            returnString = "SQL Error: " + ex.getMessage();
         }
+
+        return returnString;
+    }
 
     @POST
     @Consumes("application/json")
@@ -111,7 +112,7 @@ public class ProductRestStream {
                 returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + keys.getInt(1) + "</a>");
             }
         } catch (SQLException ex) {
-            returnString = ex.getMessage();
+            returnString = "SQL Error: " + ex.getMessage();
         }
         return returnString;
     }
@@ -135,32 +136,25 @@ public class ProductRestStream {
             returnString = ("<a>http://localhost:8080/JavaWebAssignment/stream/" + id + "</a>");
 
         } catch (SQLException ex) {
-            returnString = ex.getMessage();
+            returnString = "SQL Error: " + ex.getMessage();
         }
         return returnString;
     }
 
     @DELETE
     @Path("{id}")
-    public String doDelete(@PathParam("id") int id) throws IOException {
-        performDelete("DELETE FROM product WHERE ProductId = ?", String.valueOf(id));
-        return "";
-    }
-
-    private String performDelete(String query, String... params) {
-        String queryString;
-
-        try (Connection conn = Credentials.getConnection()) {
-            PreparedStatement pstmt = conn.prepareStatement(query);
-            for (int i = 1; i <= params.length; i++) {
-                pstmt.setString(i, params[i - 1]);
-            }
+    @Produces("application/json")
+    public String doDelete(@PathParam("id") int id) {
+        String returnString = "";
+        
+        try (Connection conn = credentials.Credentials.getConnection()) {
+            PreparedStatement pstmt = conn.prepareStatement("DELETE FROM product WHERE ProductId = ?");
+            pstmt.setString(1, String.valueOf(id));
             pstmt.executeUpdate();
-            queryString = "";
         } catch (SQLException ex) {
-            queryString = "BAD";
+            returnString = "SQL Error: " + ex.getMessage();
         }
-        return queryString;
+        return returnString;
     }
 
 }
