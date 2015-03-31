@@ -12,7 +12,7 @@ import javax.ws.rs.core.Application;
  *
  * @author Ryan
  */
-@javax.ws.rs.ApplicationPath("")
+@javax.ws.rs.ApplicationPath("rs")
 public class ApplicationConfig extends Application {
 
     @Override
@@ -29,6 +29,7 @@ public class ApplicationConfig extends Application {
      * If required, comment out calling this method in getClasses().
      */
     private void addRestResourceClasses(Set<Class<?>> resources) {
+        resources.add(Servelets.ProductRESTful.class);
         resources.add(Servelets.ProductRestStream.class);
     }
     

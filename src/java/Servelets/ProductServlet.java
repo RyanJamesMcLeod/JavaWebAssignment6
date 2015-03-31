@@ -21,7 +21,7 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author c0565705
  */
-@WebServlet("/products")
+@WebServlet("/prod")
 public class ProductServlet extends HttpServlet {
 
     /**
